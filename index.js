@@ -203,7 +203,8 @@ isAdmin=true
     app.put("/cars/update/:id",async(req,res)=>{
 const id=req.params.id
 const filter={_id:ObjectId(id)}
-const item=req.bodyconst updateDocs={
+const item=req.body
+const updateDocs={
 $set:{
   name:item.name,
   description:item.description,
