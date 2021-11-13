@@ -19,7 +19,7 @@ admin.initializeApp({
 
 
 app.get("/",(req,res)=>{
-    res.send("Successfully Run The Node And Express With Ali")
+    res.send("Successfully Run The Node And Express")
 })
 app.get("/check",(req,res)=>{
     res.send("Check  this for remote url change")
