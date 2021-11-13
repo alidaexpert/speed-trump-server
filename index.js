@@ -12,7 +12,7 @@ app.use(cors())
 
 
 //firebase admin authirized
-var serviceAccount = require('./tour-express-bd-firebase-adminsdk-lcv24-ddad30a3e5.json');
+var serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -49,72 +49,71 @@ const decodeUser=await admin.auth().verifyIdToken(idToken)
 async function run() {
     try {
       await client.connect();
-      const database = client.db("Tour-Express");
-      const offers = database.collection("offers");
+      const database = client.db("Speed-Trump");
+      const cars = database.collection("cars");
       const banner = database.collection("banner");
-      const gallery = database.collection("gallery");
-      const tourTeam = database.collection("tour-team");
-      const bookings = database.collection("booking");
+      const userData = database.collection("userData");
+      const reviews = database.collection("reviews");
+      const purchases = database.collection("purchase");
       
-    app.get("/offers",async(req,res)=>{
-      const count=await offers.find({}).count()
+    app.get("/cars",async(req,res)=>{
+      const count=await cars.find({}).count()
       const page=req.query.page
       const size=parseInt(req.query.size)
-      let offer;
+      let products;
       if(page){
-         offer=await offers.find({}).skip(page*size).limit(size).toArray()
+         products=await cars.find({}).skip(page*size).limit(size).toArray()
 
       }
       else(
-       offer=await offers.find({}).toArray()
+       products=await cars.find({}).toArray()
 
       )
       // console.log(products.length)
       res.json({
         count,
-        offer
+        products
       })
     })
     app.get("/banner",async(req,res)=>{
       const result=await banner.find({}).toArray()
       res.json(result)
     })
-    app.get("/booking/:id",async(req,res)=>{
+    app.get("/purchase/:id",async(req,res)=>{
       const id=req.params.id
       const query={_id:ObjectId(id)}
-      const booking=await bookings.findOne(query)
-      res.json(booking)
+      const purchase=await purchases.findOne(query)
+      res.json(purchase)
     })
-    app.get("/booking",async(req,res)=>{
+    app.get("/purchase",async(req,res)=>{
       let query={}
       const email=req.query.email
      if(email){
      query={email:email}
      }
-     const cursor= bookings.find(query)
-     const booking=await cursor.toArray()
-     console.log(booking)
-     res.json(booking)
+     const cursor= purchases.find(query)
+     const purchase=await cursor.toArray()
+     res.json(purchase)
     })
-    app.delete("/booking/:id",async(req,res)=>{
+    app.delete("/purchase/:id",async(req,res)=>{
       const id=req.params.id
     const item={_id:ObjectId(id)}
-  const booking=await bookings.deleteOne(item)
-  res.json(booking) 
+  const purchase=await purchases.deleteOne(item)
+  res.json(purchase) 
   })
     app.get("/myorder/:email",verifyToken,async(req,res)=>{
       const email=req.params.email
       // console.log(req.decodeUserEmail)
       if(req.decodeUserEmail===email){
     const query={email:email}
-    const booking=await bookings.find(query).toArray()
-    res.json(booking) 
+    const purchase=await purchases.find(query).toArray()
+    res.json(purchase) 
    }
    else{
      res.status(401).json({Message:"This is invalid authirized"})
    }
   })
-    app.put("/booking/:id",async(req,res)=>{
+    app.put("/purchase/:id",async(req,res)=>{
       const id=req.params.id
       const filter={_id:ObjectId(id)}
       const item=req.body
@@ -124,34 +123,83 @@ async function run() {
        status:item.status
       }
       }
-      const booking=await bookings.updateOne(filter,updateDocs,option)
-      res.json(booking)
+      const purchase=await purchases.updateOne(filter,updateDocs,option)
+      res.json(purchase)
           })
-    app.get("/gallery",async(req,res)=>{
-      const result=await gallery.find({}).toArray()
+    app.get("/user_data",async(req,res)=>{
+      const result=await userData.find({}).toArray()
       res.json(result)
     })
-    app.get("/tour-team",async(req,res)=>{
-      const result=await tourTeam.find({}).toArray()
-      res.json(result)
+    app.get('/user/:email',async(req,res)=>{
+      const email=req.params.email
+      const query={email:email}
+      const user=await userData.findOne(query)
+      let isAdmin=false
+      if(user?.role==='Admin'){
+isAdmin=true
+      }
+      res.json({Admin:isAdmin})
     })
-    app.get("/offers/:id",async(req,res)=>{
+    app.get("/user_data/:id",async(req,res)=>{
       const id=req.params.id
       const query={_id:ObjectId(id)}
-      const result=await offers.findOne(query)
+      const purchase=await userData.findOne(query)
+      res.json(purchase)
+    })
+    app.post("/user_data",async(req,res)=>{
+      const item=req.body
+      const result=await userData.insertOne(item)
       res.json(result)
     })
-    app.post("/offers",async(req,res)=>{
+    app.put("/user_data",async(req,res)=>{
       const item=req.body
-      const result=await offers.insertOne(item)
+      const filter={email:item.email}
+      const option={upsert:true}
+      const updateDocs={
+        $set:item
+      }
+      const result=await userData.updateOne(filter,updateDocs,option)
       res.json(result)
     })
-    app.post("/booking",async(req,res)=>{
+    app.put("/user_admin/:id",async(req,res)=>{
+      const id=req.params.id
+      const filter={_id:ObjectId(id)}
       const item=req.body
-      const booking=await bookings.insertOne(item)
-      res.json(booking)
+      const option={upsert:true}
+      const updateDocs={
+      $set:{
+       role:item.role
+      }
+      }
+      const purchase=await userData.updateOne(filter,updateDocs,option)
+      res.json(purchase)
+          })
+    app.get("/reviews",async(req,res)=>{
+      const result=await reviews.find({}).toArray()
+      res.json(result)
     })
-    app.put("/offers/update/:id",async(req,res)=>{
+    app.post("/reviews",async(req,res)=>{
+      const item=req.body
+      const result=await reviews.insertOne(item)
+      res.json(result)
+    })
+    app.get("/cars/:id",async(req,res)=>{
+      const id=req.params.id
+      const query={_id:ObjectId(id)}
+      const result=await cars.findOne(query)
+      res.json(result)
+    })
+    app.post("/cars",async(req,res)=>{
+      const item=req.body
+      const result=await cars.insertOne(item)
+      res.json(result)
+    })
+    app.post("/purchase",async(req,res)=>{
+      const item=req.body
+      const purchase=await purchases.insertOne(item)
+      res.json(purchase)
+    })
+    app.put("/cars/update/:id",async(req,res)=>{
 const id=req.params.id
 const filter={_id:ObjectId(id)}
 const item=req.body
@@ -170,14 +218,14 @@ departureTime:item.departureTime,
 returnTime:item.returnTime,
 }
 }
-const result=await offers.updateOne(filter,updateDocs,option)
+const result=await cars.updateOne(filter,updateDocs,option)
 res.json(result)
     })
   
-    app.delete("/offers/:id",async(req,res)=>{
+    app.delete("/cars/:id",async(req,res)=>{
       const id=req.params.id
     const item={_id:ObjectId(id)}
-  const result=await offers.deleteOne(item)
+  const result=await cars.deleteOne(item)
   res.json(result) 
   })
     } finally {
