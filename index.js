@@ -203,23 +203,30 @@ isAdmin=true
     app.put("/cars/update/:id",async(req,res)=>{
 const id=req.params.id
 const filter={_id:ObjectId(id)}
-const item=req.body
-const option={upsert:true}
-const updateDocs={
+const item=req.bodyconst updateDocs={
 $set:{
-  title:item.title,
-  location:item.location,
+  name:item.name,
+  description:item.description,
   price:item.price,
-  groupSize:item.groupSize,
-  duration:item.duration,
-photo:item.photo,
-tourType:item.tourType,
-introduction:item.introduction,
-departureTime:item.departureTime,
-returnTime:item.returnTime,
+  features:item.features,
+  equipment:item.equipment,
+  pic:item.pic,
+  brand:item.brand,
+  rating:item.rating,
+  status:item.status,
+  madeyear:item.madeyear,
+  mileage:item.mileage,
+  fuel:item.fuel,
+  engine:item.engine,
+  horsepower:item.horsepower,
+  peopleRating:item.peopleRating,
+  economy:item.economy,
+  transmission:item.transmission,
+  color:item.color,
+  door:item.door
 }
 }
-const result=await cars.updateOne(filter,updateDocs,option)
+const result=await cars.updateOne(filter,updateDocs)
 res.json(result)
     })
   
